@@ -5,9 +5,10 @@ local user_commands   = require("codeforces-nvim.user_commands")
 local M = {}
 
 -- Everything in setup should be in the returned object.
-for i in pairs(setup) do
+for _, i in ipairs(setup) do
 	M[i] = setup[i]
 end
+M.setup = setup.setup
 
 -- We don't need the setup objects, so we are taking only the ones we need.
 M.user_commands     = user_commands.user_commands
