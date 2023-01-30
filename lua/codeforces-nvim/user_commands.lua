@@ -59,6 +59,12 @@ M.user_commands = function ()
 	vim.api.nvim_create_user_command("RunCurrent", function ()
 		commands.runNormally(codeforces.problems[codeforces.current_problem])
 	end, {})
+	vim.api.nvim_create_user_command("CreateTestCase", function ()
+		commands.createTestCase(codeforces.problems[codeforces.current_problem])
+	end, {})
+	vim.api.nvim_create_user_command("RetrieveLastTestCase", function ()
+		commands.retrieveLastTestCase(codeforces.problems[codeforces.current_problem])
+	end, {})
 
 end
 
