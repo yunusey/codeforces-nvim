@@ -9,8 +9,8 @@ M.getFile = function (problem)
 end
 
 M.file_exists = function (name)
-   local f=io.open(name,"r")
-   if f~=nil then io.close(f) return true else return false end
+	local f=io.open(name,"r")
+	if f~=nil then io.close(f) return true else return false end
 end
 
 M.enterContest = function (cont)
@@ -43,7 +43,7 @@ M.enterContest = function (cont)
 		M.current_problem = 1
 		vim.cmd(":cd " .. M.cf_program_path .. M.current_contest .. '/') -- Set the cwd to your solutions dir.
 		vim.cmd(":tabnew " .. M.getFile(M.problems[M.current_problem]))
-		vim.cmd(":" .. M.line)
+		vim.cmd(":" .. M.lines[M.extension])
 	end
 	if found_contest == false then
 		M.getTest(contest, exit_function)
