@@ -146,11 +146,15 @@ M.testProblem = function (problem)
 					table.insert(lines, j)
 				end
 				local same = M.compare(lines, output)
+				local message = ""
 				if same then
-					print("Test Case #" .. test_case .. " success ✓")
+					message = "Test Case #" .. test_case .. " success ✓"
 				else
-					print("Test Case #" .. test_case .. " failed x")
+					message = "Test Case #" .. test_case .. " failed x"
 				end
+				require("notify")(message, "info", {
+					render = 'minimal'
+				})
 			end
 		end
 	end
@@ -172,6 +176,60 @@ M.runNormally = function (problem)
 		vim.cmd(":set number!")
 		vim.cmd(":set relativenumber!")
 		vim.api.nvim_paste(file_path, true, 3)
+	end
+end
+
+M.createTestCase = function (problem)
+	local buffer = vim.api.nvim_create_buf(true, false)
+	vim.api.nvim_buf_set_name(buffer, "Your Test Case For Problem #" .. problem)
+	local x, y = math.ceil(vim.api.nvim_win_get_height(0) / 2 - 10), math.ceil(vim.api.nvim_win_get_width(0) / 2 - 50)
+	local win = vim.api.nvim_open_win(buffer, true,
+		{relative='editor', width=100, height=20, row=x, col=y, anchor="NW", border="rounded"}
+	)
+	local ns = vim.api.nvim_create_namespace("Transparent")
+	vim.api.nvim_set_hl(ns, "Normal", {bg = "#000000"})
+	vim.api.nvim_win_set_hl_ns(win, ns)
+	vim.api.nvim_buf_set_keymap(buffer, "n", "<CR>",
+		":lua require'codeforces-nvim.commands'.getTestCase('" .. problem .. "', " .. buffer .. ", " .. win .. ")<CR>",
+	{})
+end
+
+M.getTestCase = function (problem, buf, win)
+	local input = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+	local file_path = setup.cf_program_path .. codeforces.getCurrentContest() .. "/user_input.txt"
+	local file = io.open(file_path, 'w')
+	if file == nil then
+		return
+	end
+	for _, i in pairs(input) do
+		file:write(i .. '\n')
+	end
+	file:close()
+	local exec_name = getFileWithoutExtenstion(string.lower(problem))
+	local command = "\"" .. exec_name .. ' < ' .. file_path .. "\""
+	if setup.termToggle == true then
+		vim.cmd(":TermExec cmd=" .. command)
+	else
+		vim.cmd(":terminal ")
+		vim.cmd(":set number!")
+		vim.cmd(":set relativenumber!")
+		vim.api.nvim_paste(command, true, 3)
+	end
+	vim.api.nvim_win_close(win, true)
+	vim.api.nvim_buf_delete(buf, {force = true})
+end
+
+M.retrieveLastTestCase = function (problem)
+	local file_path = setup.cf_program_path .. codeforces.getCurrentContest() .. "/user_input.txt"
+	local exec_name = getFileWithoutExtenstion(string.lower(problem))
+	local command = "\"" .. exec_name .. ' < ' .. file_path .. "\""
+	if setup.termToggle == true then
+		vim.cmd(":TermExec cmd=" .. command)
+	else
+		vim.cmd(":terminal ")
+		vim.cmd(":set number!")
+		vim.cmd(":set relativenumber!")
+		vim.api.nvim_paste(command, true, 3)
 	end
 end
 
