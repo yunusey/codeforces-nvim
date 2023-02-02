@@ -25,9 +25,15 @@ M.linux_test_path = "\\wsl.localhost\\Ubuntu-20.04" .. convertToWindowsPath(M.cf
 M.linux_program_path = "\\wsl.localhost\\Ubuntu-20.04" .. convertToWindowsPath(M.cf_program_path)
 M.use_contest_number = true
 
+-- notify.nvim
+M.notify_nvim = true
+
 -- Coding settings
 M.extension = 'cpp'
-M.line = 6
+M.lines = {
+	cpp = 6,
+	py = 3
+}
 
 -- Templates
 M.templates = {
@@ -49,13 +55,36 @@ M.run = {
 	cpp = "@ < #"
 }
 
+-- This is for program to be executed in the terminal.
+M.run_terminal = {
+	py = "python @.py",
+	cpp = "@"
+}
+
 -- Terminal Settings
 M.termToggle = true
 
+M.highlights = {
+
+	CodeforcesErrorMsg = {fg="#ff3333"},
+	CodeforcesSection  = {fg="#00c0ff"},
+	CodeforcesOutput   = {fg="#a0ff00"}
+
+}
+
+M.test_window_ns = vim.api.nvim_create_namespace("TestCaseNamespace")
+vim.api.nvim_set_hl(M.test_window_ns, "Normal", {bg = "#000000"})
+
+for key, value in pairs(M.highlights) do
+	vim.api.nvim_set_hl(0, key, value)
+end
 
 -- Setup function
-M.setup = function ()
+M.setup = function (config)
 	vim.fn.system { 'git', 'clone', 'https://github.com/yunusey/codeforces-extractor.git', M.install_path }
+	for key, value in pairs(config) do
+		M[key] = value
+	end
 end
 
 return M
