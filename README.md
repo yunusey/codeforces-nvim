@@ -1,4 +1,10 @@
 # codeforces-nvim
+
+
+
+https://user-images.githubusercontent.com/107340417/216217952-1e77ec02-fda8-4b58-ac1e-774797e00162.mp4
+
+
 The neovim plugin for codeforces.
 
 
