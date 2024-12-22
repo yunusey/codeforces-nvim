@@ -1,71 +1,44 @@
-local setup       = require('codeforces-nvim.setup')
-local codeforces  = require('codeforces-nvim.codeforces')
-local commands    = require('codeforces-nvim.commands')
+local codeforces = require('codeforces-nvim.codeforces')
+local commands = require('codeforces-nvim.commands')
 
 local M = {}
 
-for i in pairs(setup) do
-	M[i] = setup[i]
+--- @param jump integer
+--- Jumps to the next `jump`-th question - most of the time, jump = 1 (if called `:QNext`)
+M.next_question = function (jump)
+	-- Lua is 1-indexed :D
+	codeforces.current_problem = (codeforces.current_problem + jump - 1) % #codeforces.problems + 1
+	local solution_file = codeforces.get_solution_file(codeforces.problems[codeforces.current_problem], codeforces.options.extension)
+	vim.cmd(":tabnew" .. solution_file)
+	vim.api.nvim_win_set_cursor(0, { codeforces.options.lines[codeforces.options.extension], 0 })
 end
 
-M.enterContest = codeforces.enterContest
-
-M.openExplorer = function (contest)
-	if contest == nil or contest == '' then
-		vim.fn.jobstart({"explorer.exe", '"' .. M.linux_cf_path .. '"'})
-	else
-		vim.fn.jobstart({"explorer.exe", '"' .. M.linux_test_path .. '\\' .. contest .. '"'})
-	end
-end
-
-M.nextQuestion = function (jump)
-	codeforces.current_problem = codeforces.current_problem % #codeforces.problems + jump % #codeforces.problems
-	vim.cmd(":tabnew" .. codeforces.getFile(codeforces.problems[codeforces.current_problem]))
-	vim.cmd(":" .. setup.line)
-end
-
+--- Creates all the user commands used by the plugin
 M.user_commands = function ()
-	-- Main command 
 	vim.api.nvim_create_user_command("EnterContest", function (args)
 		local contest = args["args"]
-		M.enterContest(contest)
+		codeforces.enter_contest(contest)
 	end, {nargs = "?"})
-	-- Explorer commands 
-	vim.api.nvim_create_user_command("ExplorerCF", function (args)
-		local contest = args["args"]
-		M.openExplorer(contest)
-	end, {nargs = "?"})
-	vim.api.nvim_create_user_command("ExplorerCFForCurrent", function ()
-		local current_contest = codeforces.getCurrentContest()
-		if current_contest == nil then
-			print("You haven't created a contest yet! Run \":EnterContest\"")
-		else
-			M.openExplorer(current_contest)
-		end
-	end, {})
-	-- Question commands
 	vim.api.nvim_create_user_command("QNext", function (args)
 		local jump = args["args"]
 		if jump == nil or jump == "" then
-			M.nextQuestion(1)
+			M.next_question(1)
 		else
-			M.nextQuestion(jump)
+			M.next_question(jump)
 		end
 	end, {nargs = "?"})
-	-- Test commands
 	vim.api.nvim_create_user_command("TestCurrent", function ()
-		commands.testProblem(codeforces.problems[codeforces.current_problem])
+		commands.test_problem(codeforces.problems[codeforces.current_problem])
 	end, {})
 	vim.api.nvim_create_user_command("RunCurrent", function ()
-		commands.runNormally(codeforces.problems[codeforces.current_problem])
+		commands.run_normally(codeforces.problems[codeforces.current_problem])
 	end, {})
 	vim.api.nvim_create_user_command("CreateTestCase", function ()
-		commands.createTestCase(codeforces.problems[codeforces.current_problem])
+		commands.create_custom_test_case(codeforces.problems[codeforces.current_problem])
 	end, {})
 	vim.api.nvim_create_user_command("RetrieveLastTestCase", function ()
-		commands.retrieveLastTestCase(codeforces.problems[codeforces.current_problem])
+		commands.run_custom_test(codeforces.problems[codeforces.current_problem])
 	end, {})
-
 end
 
 return M

@@ -1,90 +1,114 @@
-local M = {}
+local M = {
+	options = {
+		--- @type string
+		--- The path to the Codeforces directory
+		cf_path = vim.fs.joinpath(vim.fn.getenv("HOME"), "codeforces"),
 
--- Paths & Directories
-M.home_dir = vim.fn.expand("~")
-M.install_path = M.home_dir .. "/.local/share/nvim/site/pack/packer/start/codeforces-extractor/"
-M.cf_path = M.home_dir .. "/codeforces/contests/"
-M.cf_tc_path = M.home_dir .. "/codeforces/contests/test/"
-M.cf_program_path = M.home_dir .. "/codeforces/contests/solutions/"
-M.python_path = "python3"
+		--- @type string
+		--- The path to the Codeforces extractor directory (default: `codeforces-extractor`)
+		--- You don't need to modify this if it is on your `PATH`
+		extractor_path = 'codeforces-extractor',
 
--- Buffer settings
-M.write_to_buffer = false
-M.keep_buf = false
+		--- @type string
+		--- The extension of the language you would like to use
+		extension = 'cpp',
 
--- Explorer Settings & Paths (Just for Windows)
-local convertToWindowsPath = function (path)
-	local a = string.gsub(path, "/", "\\")
-	a = string.sub(a, 0, #a - 1)
-	return a
+		--- @type table
+		--- When opened a new tab with the current problem, it will place your cursor
+		--- at this line - useful if you have a ton of functions above your main method
+		lines = {
+			cpp = 6,
+			py = 3
+		},
+
+		--- @type integer
+		--- The timeout for the run command (in milliseconds)
+		timeout = 15000,
+
+		--- @type table
+		--- The commands to compile and run the given problem
+		--- You can use `@` as a placeholder for the current problem
+		compiler = {
+			py = {},
+			cpp = { "g++", "@.cpp", "-o", "@" }
+		},
+
+		--- @type table
+		--- The run command to run for each language. It will treat `@` symbols
+		--- as placeholders for the current problem. The program will pass in the
+		--- input file as stdin - don't worry about it :D
+		run = {
+			py = { "python3", "@.py" },
+			cpp = { "@" }
+		},
+
+		--- @type boolean
+		--- Whether to use [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim)
+		--- Highly recommended
+		use_term_toggle = true,
+		--- @param title string
+		--- @param message string | nil
+		--- @param type "success" | "error"
+		--- Notification function. Uses `vim.print` and sets log level to
+		--- `vim.log.levels.WARN` for "success" and `vim.log.levels.ERROR` for "error"
+		--- I recommend using [nvim-notify](https://github.com/rcarriga/nvim-notify)
+		--- and maybe use a function like this:
+		--- ```lua
+		--- function (title, message, type)
+		---		if message == nil then
+		---			vim.notify(title, type, {
+		---				render = "minimal",
+		---			})
+		---		else
+		---			vim.notify(message, type, {
+		---				title = title,
+		---			})
+		---		end
+		--- end
+		--- ```
+		notify = function(title, message, type)
+			local log_level = type == "success" and vim.log.levels.WARN or vim.log.levels.ERROR
+			message = title .. (message ~= nil and "\n" .. message or "")
+			vim.notify(message, log_level)
+		end,
+	},
+	paths = {
+		contests = nil,
+		tests = nil,
+		solutions = nil,
+		templates = nil
+	},
+}
+
+--- @param cf_path string | nil
+--- Sets the paths. If no path provided as `cf_path`, it will use the default path (`$HOME/codeforces/contests`)
+local setup_paths = function(cf_path)
+	M.paths.contests = vim.fs.joinpath(cf_path, "contests")
+	M.paths.tests = vim.fs.joinpath(M.paths.contests, "test")
+	M.paths.solutions = vim.fs.joinpath(M.paths.contests, "solutions")
+	M.paths.templates = vim.fs.joinpath(M.paths.contests, "templates")
+
+	vim.fn.mkdir(cf_path, "p")
+	vim.fn.mkdir(M.paths.contests, "p")
+	vim.fn.mkdir(M.paths.tests, "p")
+	vim.fn.mkdir(M.paths.solutions, "p")
+	vim.fn.mkdir(M.paths.templates, "p")
 end
 
-M.linux_path = "\\wsl.localhost\\Ubuntu-20.04"
-M.linux_cf_path = "\\wsl.localhost\\Ubuntu-20.04" .. convertToWindowsPath(M.cf_path)
-M.linux_test_path = "\\wsl.localhost\\Ubuntu-20.04" .. convertToWindowsPath(M.cf_tc_path)
-M.linux_program_path = "\\wsl.localhost\\Ubuntu-20.04" .. convertToWindowsPath(M.cf_program_path)
-M.use_contest_number = true
+--- @param config table
+--- Setup function
+M.setup = function(config)
+	M.options = vim.tbl_deep_extend("force", M.options, config or {})
 
--- notify.nvim
-M.notify_nvim = true
-
--- Coding settings
-M.extension = 'cpp'
-M.lines = {
-	cpp = 6,
-	py = 3
-}
-
--- Templates
-M.templates = {
-	py  = M.home_dir .. "/codeforces/templates/template.py",
-	cpp = M.home_dir .. "/codeforces/templates/template.cpp"
-}
-
--- Commands
--- '@' should be thought as the lower cased problem name ex: 
--- Problem A -> f 
--- Problem A1 -> a1
-M.compiler = {
-	py = {},
-	cpp = {"g++", "@.cpp", "-o", "@"}
-}
-
-M.run = {
-	py = "python3 @.py < #",
-	cpp = "@ < #"
-}
-
--- This is for program to be executed in the terminal.
-M.run_terminal = {
-	py = "python @.py",
-	cpp = "@"
-}
-
--- Terminal Settings
-M.termToggle = true
-
-M.highlights = {
-
-	CodeforcesErrorMsg = {fg="#ff3333"},
-	CodeforcesSection  = {fg="#00c0ff"},
-	CodeforcesOutput   = {fg="#a0ff00"}
-
-}
-
-M.test_window_ns = vim.api.nvim_create_namespace("TestCaseNamespace")
-vim.api.nvim_set_hl(M.test_window_ns, "Normal", {bg = "#000000"})
-
-for key, value in pairs(M.highlights) do
-	vim.api.nvim_set_hl(0, key, value)
-end
-
--- Setup function
-M.setup = function (config)
-	vim.fn.system { 'git', 'clone', 'https://github.com/yunusey/codeforces-extractor.git', M.install_path }
-	for key, value in pairs(config) do
-		M[key] = value
+	if M.options.extractor_path == nil or vim.fn.executable(M.options.extractor_path) == 0 then
+		M.options.notify(
+			"Codeforces Extractor",
+			"Hi! It looks like you didn't install codeforces-extractor. Please follow the installation instructions here: https://github.com/yunusey/codeforces-extractor",
+			"error"
+		)
 	end
+
+	setup_paths(M.options.cf_path)
 end
 
 return M

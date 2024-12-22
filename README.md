@@ -1,96 +1,175 @@
 # codeforces-nvim
 
+<div align="center"><p>
+    <a href="https://github.com/yunusey/codeforces-nvim/pulse">
+      <img alt="Last commit" src="https://img.shields.io/github/last-commit/yunusey/codeforces-nvim?style=for-the-badge&logo=aiqfome&color=8bd5ca&logoColor=D9E0EE&labelColor=302D41"/>
+    </a>
+    <a href="https://github.com/yunusey/codeforces-nvim/blob/main/LICENSE">
+      <img alt="License" src="https://img.shields.io/github/license/yunusey/codeforces-nvim?style=for-the-badge&logo=academia&color=ee999f&logoColor=D9E0EE&labelColor=302D41" />
+    </a>
+    <a href="https://github.com/yunusey/codeforces-nvim/stargazers">
+      <img alt="Stars" src="https://img.shields.io/github/stars/yunusey/codeforces-nvim?style=for-the-badge&logo=adafruit&color=c69ff5&logoColor=D9E0EE&labelColor=302D41" />
+    </a>
+</div>
 
 
-https://user-images.githubusercontent.com/107340417/216217952-1e77ec02-fda8-4b58-ac1e-774797e00162.mp4
+https://github.com/user-attachments/assets/5d40ebe9-784f-4755-9af8-6de668ae0a52
 
 
-The neovim plugin for codeforces.
+## Installation 📦
+You can install `codeforces-nvim` using different package managers.
 
+---
 
-# Setup
-1) From ```init.lua``` using ```packer.nvim```.
-
-Add lines to your ```.config/nvim/init.lua```:
+### [Lazy](https://github.com/folke/lazy.nvim) 💤
 ```lua
-use 'yunusey/codeforces-nvim'
-require('codeforces-nvim').setup({
-    notify_nvim = true, -- If you have rcarriga/nvim-notify
-    term_toggle = true, -- If you have 
-    -- The other configuration options will be set to their defaults.
-    -- For more, check lua/codeforces-nvim/setup.lua
-    -- @ means ~/codeforces/contests/solutions/{contest_num}/{problem_name}
-    -- So for cpp, for example, if you want to produce .out, you should put @.out instead of @. See examples:
-    compile = {
-        your_lang = {"compile", "@.lang", "@.exe"},
-        cpp = {"g++", "@.cpp", "-o", "@.out"},
-        py = {}
-    },
-    -- @ means the same while # means the test case. In bash, you can give file as an input using '<'. So you should write your run command and add '<', '#'. See examples:
-    run = {
-        your_lang = {"run", "@.exe", "<", "#"},
-        cpp = {"@.out", "<", "#"},
-        py = {"python3", "@.py", "<", "#"}
+local spec = {
+    "yunusey/codeforces-nvim",
+    dependencies = { "nvim-lua/plenary.nvim" } -- optional, used for testing
+}
+
+spec.config = function()
+    require('codeforces-nvim').setup {
+        use_term_toggle = true,
+        cf_path = "/path/to/desired/codeforces/folder",
+        timeout = 15000,
+        compiler = {
+            cpp = { "g++", "@.cpp", "-o", "@" },
+            py = {}
+        },
+        run = {
+            cpp = { "@" },
+            py = { "python3", "@.py" }
+        },
+        notify = function(title, message, type)
+            local notify = require('notify')
+            if message == nil then
+                notify(title, type, {
+                    render = "minimal",
+                })
+            else
+                notify(message, type, {
+                    title = title,
+                })
+            end
+        end
     }
-})
+end
+
+return spec
 ```
 
-2) From ```github.com```:
+### [Packer](https://github.com/wbthomason/packer.nvim) 📦
+```lua
+use {
+    "yunusey/codeforces-nvim",
+    config = function()
+        require('codeforces-nvim').setup {
+            use_term_toggle = true,
+            cf_path = "/path/to/desired/codeforces/folder",
+            compiler = {
+                cpp = { "g++", "@.cpp", "-o", "@" },
+                py = {}
+            },
+            run = {
+                cpp = { "@" },
+                py = { "python3", "@.py" }
+            },
+            notify = function(title, message, type)
+                local notify = require('notify')
+                if message == nil then
+                    notify(title, type, {
+                        render = "minimal",
+                    })
+                else
+                    notify(message, type, {
+                        title = title,
+                    })
+                end
+            end
+        }
+    end
+}
+```
+
+
+## Usage 📝
+Using this plugin is very easy, you just need to follow these steps:
+
+### Installing [codeforces-extractor](https://github.com/yunusey/codeforces-extractor/) 🌻
+This tool is used to extract problem information from codeforces. It is written in Rust and is working pretty fast. You can use it as a separate tool and probably as a library with some modifications if you have other ideas. Anyway, for Neovim purposes, you just need to install the tool to your path. You can do this by running:
 ```bash
-cd ~/.local/share/nvim/site/pack/packer/start/;
-git clone https://github.com/yunusey/codeforces-nvim.git
+cargo install --git https://github.com/yunusey/codeforces-extractor
 ```
+If you are able to run `codeforces-extractor --help` without any errors, you are good to go (the plugin will check if `codeforces-extractor` is on your `PATH`). If you have done a local installation, you need to pass `extractor_path = /path/to/codeforces/extractor` to `setup` function you've seen above.
 
-# Using Commands
-```
-:EnterContest {contest number}
-```
-Downloads and sets up the environment for the {contest number} given.
-___
-```
-:ExplorerCF
-```
-It will open your ```~/codeforces/contests/``` folder in default.
-___
-```
-:ExplorerCFCurrent
-```
-Opens your ```~/codeforces/contests/test/{active contest number}```.
-___
-```
-:QNext
-```
-Sets current problem to the next problem, and opens the file.
-___
-```
-:TestCurrent
-```
-If your active language has any command in ```setup.compile[setup.extension]```, it does that first. If it doesn't compile it, it will notify you and open the error in a new buffer. If it compiles, it will run the command in your ```setup.run[setup.extension]``` for **all** the tests and notify you about the results. If there are any errors, it will open you up a new buffer, with the expected output and found output.
-___
-```
-:RunCurrent
-```
-It opens a terminal, and runs ```setup.terminal_run[setup.extension]```. 
+### Setting up Templates 🎨
+This step is very important! the `cf_path` you provided in `setup` will be used to check if you have any templates on `cf_path/contests/templates` directory. If you set your `extension` to be `cpp`, for instance, you need to have a file at `cf_path/contests/templates/template.cpp`. You can place multiple templates for different languages here if you are writing in many different languages and switching between them very often.
 
-PS: For some reason I don't know, whenever I try to do this in python it doesn't work. It actually opens a terminal with the command I want but then I can't do ```:TestCurrent``` anymore.
-___
+### Setting up the Plugin 🎉
+We are almost done! As you can also agree, you need to let the plugin know what command to run for compilation and running. By default, for `cpp`, which is the language most competitive programmers use, it will use the following compile command:
+```lua
+{ "g++", "@.cpp", "-o", "@" }
 ```
-:CreateTestCase
+Here, `@` acts as the current problem (e.g. a, b, c1, c3, etc.). The default run command for `cpp` is:
+```lua
+{ "@" }
 ```
-It will open up you a buffer that asks for input. It'll write the given input to a file named ```user_input.txt```. Then, it'll run the command in your ```setup.run[setup.extension]``` in a new terminal.
+If you have custom languages that you would like to use, hopefully not Java `:)`, you can follow this example above to write similar compile and run commands.
 
-PS: For saving the test case, you should get in to the normal mode and press ```Enter```. 
-___
+### Ready to Go! 🚀
+Okay, you are ready to go! You need to start your journey by running `:EnterContest <contest-id>`. Here, `<contest-id>` refers to `https://codeforces.com/contest/<contest-id>/problems`. For `https://codeforces.com/contest/1790/problems`, you need to run `:EnterContest 1790` for example. If everything goes nicely, this will fetch problems using `codeforces-extractor` to `cf_path/contests/tests/<contest-id>`, copy your template to `cf_path/contests/solutions/<contest-id>` for each problem and open up the first problem for you in your terminal.
+
+#### Testing your code 🧪
+There are three different ways to test your code.
+
+##### Using the tests from codeforces
+You just need to run `:TestCurrent`. This will compile your code, run it by passing each of the inputs fetched from codeforces, and compare your output with the expected output. If they are not the same, it will open your output and expected output in `diff` mode in Neovim.
+
+##### Using your own tests
+I added this feature so that if you have a custom test you want to run, you can do this one time and run it again and again. You need to run `:CreateTestCase` and it will open up a buffer. There, you need to type in your input and once you are done, you need to switch to normal mode and press enter. This will save your input to `cf_path/solutions/<contest-id>/custom-<problem>.in` and run it on terminal. There, you can check your output.
+
+##### Run directly on terminal
+Maybe you want to *freestyle* your input like you would've done normally. Then, you just need to run `:RunCurrent`. This will compile your code, and run it directly on your terminal. There, you can type in your input and check your output.
+
+## Using [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) ⚙️
+I enjoy using toggleterm myself and would recommend to anyone interested. By default, the plugin will try running it using `:TermExec` but if you don't want this feature and want to run it directly on terminal, you need to set `use_term_toggle = false` on your setup.
+
+## Using [notify.nvim](https://github.com/rcarriga/nvim-notify) 📢
+If you would like some fancy notifications from `codeforces-nvim`, you can use notify. To do that, you need to first install the plugin of course and then, you can copy my setup above, specifically this part:
+```lua
+notify = function(title, message, type)
+    local notify = require('notify')
+    if message == nil then
+        notify(title, type, {
+            render = "minimal",
+        })
+    else
+        notify(message, type, {
+            title = title,
+        })
+    end
+end
 ```
-:RetrieveLastTestCase
-```
-It runs the last given test case by the user using ```:CreateTestCase``` command. It basically does the same thing ```:CreateTestCase``` does, except the menu opens up for the user input.
+There is a default `notify` function `codeforces-nvim` defines using `vim.notify`, though. So, this is completely up to you to decide which one you would prefer. Though, I strongly suggest using [notify.nvim](https://github.com/rcarriga/nvim-notify).
 
-# Customization
-See ```codeforces-nvim/lua/codeforces-nvim/setup.lua```. I do recommend you to use the setup file, because you can see every single customization option.
+## Timeout for Running Code 🕒
+There is a `timeout` parameter you can override in your `setup` function. This is passed directly to your `run` command. I think this can be useful especially when you expect more input than there actually is supposed to be. This value is set to `15000` milliseconds by default. If you think this is too much, I think so, you can most definitely change this to a more reasonable value like `5000` milliseconds.
 
-# Errors
-As I've mentioned before, right now, whenever I open the terminal, I can't make ```:TestCurrent``` work for python. For more details, see ```codeforces-nvim/lua/codeforces-nvim/commands.lua```. 
+## Thanks! ✨
+Thanks for reading! If you liked the plugin, you can consider leaving a star. If you encounter any issues or have a good idea to enhance the plugin, make sure to [open up an issue](https://github.com/yunusey/codeforces-nvim/issues).
 
-# Contribution
-I'd very much appreciate any contribution. Even starring would be great!
+## Acknowledgements 🏆
+I've recently seen that there is a new plugin that is getting popular. I think you should most definitely check it out as well - I didn't really get a chance to check it in detail, but it looks like it supports codeforces as well: [assistant.nvim](https://github.com/A7Lavinraj/assistant.nvim)
+
+## Credits 🎖️
+- [codeforces-extractor](https://github.com/yunusey/codeforces-extractor/)
+- [notify.nvim](https://github.com/rcarriga/nvim-notify/)
+- [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim/)
+- [lazy.nvim](https://github.com/folke/lazy.nvim)
+- [packer.nvim](https://github.com/wbthomason/packer.nvim)
+- [plenary.nvim](https://github.com/nvim-lua/plenary.nvim)
+- [assistant.nvim](https://github.com/A7Lavinraj/assistant.nvim)
+- [Neovim](https://neovim.io/)
+- [Lua](https://www.lua.org/)
+- [Codeforces](https://codeforces.com/)
