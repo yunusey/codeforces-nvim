@@ -6,7 +6,7 @@ local M = {}
 --- @return string
 --- Returns the filename without the extension
 M.trim_extension = function(filename)
-	return filename:match("(.+)%..+$") or filename
+    return filename:match("(.+)%..+$") or filename
 end
 
 --- @param str string
@@ -14,33 +14,29 @@ end
 --- Returns the string without the spaces in the beginning and the end
 --- e.g. `  hello  ` -> `hello`
 M.trim = function(str)
-	return (str:gsub("^%s*(.-)%s*$", "%1"))
+    return (str:gsub("^%s*(.-)%s*$", "%1"))
 end
 
 M.getRidOfSpaces = function(a)
-	-- This function's goal is to get rid of the spaces in the beginning and the end of each line.
+    -- This function's goal is to get rid of the spaces in the beginning and the end of each line.
 
-	local i = 1
-	while true do
-		-- If there's a character that is a non-whitespaces character, then you found the beginning.
-		local s = string.match(string.sub(a, i, i), "%S")
-		if s ~= nil then
-			break
-		end
-		i = i + 1
-	end
+    local i = 1
+    while true do
+        -- If there's a character that is a non-whitespaces character, then you found the beginning.
+        local s = string.match(string.sub(a, i, i), "%S")
+        if s ~= nil then break end
+        i = i + 1
+    end
 
-	local j = #a
-	while true do
-		-- If there's a character that is a non-whitespaces character, then you found the end.
-		local s = string.match(string.sub(a, j, j), "%S")
-		if s ~= nil then
-			break
-		end
-		j = j - 1
-	end
+    local j = #a
+    while true do
+        -- If there's a character that is a non-whitespaces character, then you found the end.
+        local s = string.match(string.sub(a, j, j), "%S")
+        if s ~= nil then break end
+        j = j - 1
+    end
 
-	return string.sub(a, i, j)
+    return string.sub(a, i, j)
 end
 
 --- @param data string[]
@@ -51,35 +47,31 @@ end
 --- important in it. This function aims to iterate over the `data` and check
 --- if there is anything important in it
 M.check_data = function(data)
-	if data == nil or data == {} or data == '' then
-		return false
-	end
+    if data == nil or data == {} or data == "" then return false end
 
-	if type(data) == "table" then
-		for _, i in pairs(data) do
-			if i ~= nil and i ~= {} and i ~= '' then
-				return true
-			end
-		end
-		return false
-	elseif type(data) == "string" then
-		return data ~= string.match(data, "%s+")
-	end
+    if type(data) == "table" then
+        for _, i in pairs(data) do
+            if i ~= nil and i ~= {} and i ~= "" then return true end
+        end
+        return false
+    elseif type(data) == "string" then
+        return data ~= string.match(data, "%s+")
+    end
 
-	return true
+    return true
 end
 
 --- @param source string
 --- @param destination string
 --- Copies the file from `source` to `destination`
 M.copy_file = function(source, destination)
-	local file = io.open(destination, "w")
-	if file ~= nil then
-		for i in io.lines(source) do
-			file:write(i .. '\n')
-		end
-		file:close()
-	end
+    local file = io.open(destination, "w")
+    if file ~= nil then
+        for i in io.lines(source) do
+            file:write(i .. "\n")
+        end
+        file:close()
+    end
 end
 
 --- @param lines string[]
@@ -92,27 +84,22 @@ end
 --- the spaces between two elements do not matter. You will need to decide
 --- it in `diffview`. Also, it will ignore any empty lines
 M.compare = function(lines, output_lines)
-	local i = 1
-	local j = 1
-	while i <= #lines and j <= #output_lines do
-		local lhs, rhs = M.trim(lines[i]), M.trim(output_lines[j])
-		if lhs == "" then
-			i = i + 1
-			goto continue
-		end
-		if rhs == "" then
-			j = j + 1
-			goto continue
-		end
-		if lhs ~= rhs then
-			return false
-		end
-		i = i + 1
-		j = j + 1
-		::continue::
-	end
-
-	return true
+    local i = 1
+    local j = 1
+    while i <= #lines and j <= #output_lines do
+        local lhs, rhs = M.trim(lines[i]), M.trim(output_lines[j])
+        if lhs == "" then
+            i = i + 1
+        elseif rhs == "" then
+            j = j + 1
+        elseif lhs ~= rhs then
+            return false
+        else
+            i = i + 1
+            j = j + 1
+        end
+    end
+    return true
 end
 
 return M
