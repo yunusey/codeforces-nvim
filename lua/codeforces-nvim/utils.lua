@@ -86,18 +86,25 @@ end
 M.compare = function(lines, output_lines)
     local i = 1
     local j = 1
-    while i <= #lines and j <= #output_lines do
+    while i <= #lines or j <= #output_lines do
+		while i <= #lines and M.trim(lines[i]) == "" do
+			i = i + 1
+		end
+		while j <= #output_lines and M.trim(output_lines[j]) == "" do
+			j = j + 1
+		end
+
+		if i > #lines or j > #output_lines then
+			return i > #lines and j > #output_lines
+		end
+
         local lhs, rhs = M.trim(lines[i]), M.trim(output_lines[j])
-        if lhs == "" then
-            i = i + 1
-        elseif rhs == "" then
-            j = j + 1
-        elseif lhs ~= rhs then
-            return false
-        else
-            i = i + 1
-            j = j + 1
-        end
+		if lhs ~= rhs then
+			return false
+		end
+
+		i = i + 1
+		j = j + 1
     end
     return true
 end
