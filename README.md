@@ -15,6 +15,15 @@
 
 https://github.com/user-attachments/assets/5d40ebe9-784f-4755-9af8-6de668ae0a52
 
+**Please note that this project's goal is to offer a better developer experience in *testing* and is only interested in, thus, scraping the test cases from the website. Please consult to Codeforces's policy statement for more information.**
+
+## Breaking Changes on January 14, 2026
+
+It appears that, recently, Codeforces has taken new measures to block bots trying to scrape data from the website. As a result of that, we have to simulate a browser--a very simple `curl` will not do the job. I have updated `codeforces-extractor`, and now it simulates a browser to fetch the HTML from Codeforces.
+
+**If you have been using [`codeforces-nvim`](https://github.com/yunusey/codeforces-nvim) for some time and noticed that the plugin isn't working correctly anymore, please update `codeforces-extractor` by running `cargo install --git https://github.com/yunusey/codeforces-extractor`.**
+
+**As a result of the breaking changes, there is now a new option in the plugin configuration named `use_native_display`. It is set to `false` as default (it will try to launch the window virtually using `Xvfb`), but if you are having a hard time with `Xvfb` or if it doesn't bother you that a chromium window launches and then closed immediately, I recommend setting it to `true`.**
 
 ## Installation 📦
 You can install `codeforces-nvim` using different package managers.

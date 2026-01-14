@@ -2,12 +2,20 @@ local M = {
     options = {
         --- @type string
         --- The path to the Codeforces directory
+        --- NOTE: It should be an absoluate path (see https://github.com/yunusey/codeforces-nvim/issues/8)
         cf_path = vim.fs.joinpath(vim.fn.getenv("HOME"), "codeforces"),
 
         --- @type string
         --- The path to the Codeforces extractor directory (default: `codeforces-extractor`)
         --- You don't need to modify this if it is on your `PATH`
         extractor_path = "codeforces-extractor",
+
+        --- @type boolean
+        --- Whether to use the native display to launch chromium to fetch the problems. Passed
+        --- directly to `codeforces-extractor` through the `--native-display` flag. Recommended
+        --- to set to `true` if the extractor is having issues with `Xvfb`, but it will launch
+        --- the window on your screen (and will close almost immediately after) which may be annoying.
+        use_native_display = false,
 
         --- @type string
         --- The extension of the language you would like to use
@@ -55,15 +63,15 @@ local M = {
         --- and maybe use a function like this:
         --- ```lua
         --- function (title, message, type)
-        ---		if message == nil then
-        ---			vim.notify(title, type, {
-        ---				render = "minimal",
-        ---			})
-        ---		else
-        ---			vim.notify(message, type, {
-        ---				title = title,
-        ---			})
-        ---		end
+        ---        if message == nil then
+        ---            vim.notify(title, type, {
+        ---                render = "minimal",
+        ---            })
+        ---        else
+        ---            vim.notify(message, type, {
+        ---                title = title,
+        ---            })
+        ---        end
         --- end
         --- ```
         notify = function(title, message, type)
@@ -108,7 +116,7 @@ M.setup = function(config)
         )
     end
 
-    setup_paths(M.options.cf_path)
+    setup_paths(vim.fn.expand(M.options.cf_path))
 end
 
 return M
