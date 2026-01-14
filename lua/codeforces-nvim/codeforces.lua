@@ -67,20 +67,30 @@ end
 
 --- @param contest string
 --- @param save_dir string
+--- @param use_native_display boolean
 --- @param exit_function function
 --- Fetches the problems for the `contest` using `codeforces-extractor`
 --- and calls the `exit_function`
-M.fetch_problems = function(contest, save_dir, exit_function)
-    vim.fn.jobstart({ M.options.extractor_path, contest, "--save-path", save_dir }, {
-        on_stdout = function(_, data) end,
-        on_stderr = function(_, data)
-            if utils.check_data(data) == false then return end
-            M.options.notify("Codeforces Extractor", vim.inspect(data), "error")
-        end,
-        on_exit = function(_, _)
-            exit_function()
-        end,
-    })
+M.fetch_problems = function(contest, save_dir, use_native_display, exit_function)
+    vim.fn.jobstart(
+        {
+            M.options.extractor_path,
+            contest,
+            "--save-path",
+            save_dir,
+            use_native_display and "--native-display" or nil,
+        },
+        {
+            on_stdout = function(_, data) end,
+            on_stderr = function(_, data)
+                if utils.check_data(data) == false then return end
+                M.options.notify("Codeforces Extractor", vim.inspect(data), "error")
+            end,
+            on_exit = function(_, _)
+                exit_function()
+            end,
+        }
+    )
 end
 
 --- @param contest string
